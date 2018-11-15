@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>調査項目のリスト</title>
+    <link rel="stylesheet"
+        href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="col-md-4"></div>
+      <form id="records" role="form" class="col-md-4">
+        <h1>Annict Season finder</h1>
+        <div class="form-group">
+          <label for="user_name">UserID</label>
+          <input type="text" class="form-control" id="user_name"
+               placeholder="naninunenosi">
+        </div>
+        <div class="form-group">
+          <label for="year">Year</label>
+          <input type="text" class="form-control" id="year"
+               placeholder="2018">
+        </div>
+        <div class="form-group">
+          <label for="season">Season</label>
+          <input type="text" class="form-control" id="season"
+               placeholder="autumn">
+        </div>
+      </form>
+      <a href="new.html" class="btn btn-primary">うひょおお</a>
+      </div>
+    <div class="col-md-4">
+      <div id="chart"></div>
+    </div>
+    </div>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+      $(function(){
+        const URLJoin = (...args) =>
+          args
+              .join('/')
+                  .replace(/[\/]+/g, '/')
+                      .replace(/^(.+):\//, '$1://')
+                          .replace(/^file:/, 'file:/')
+                              .replace(/\/(\?|&|#[^!])/g, '$1')
+                                  .replace(/\?/g, '&')
+                                      .replace('&', '?');
+        var form = $("form#records")
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+        var chart;
+        function drawChart(records) {
+          var data = google.visualization.DataTable();
+          data.addColumn('string', '話数');
+          data.addColumn('number', 'Hours per Day');
+          for (let i in records) {
+            record = JSON.parse(records[i])
+            [record.work_title]
+          }
+          var options = {
+            title: 'Company Performance',
+            hAxis: {title: 'Year',  titleTextStyle: {color: '#333'}},
+            vAxis: {minValue: 0}
+          };
+          
+          if (!chart) {
+            chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+          }
+          chart.draw(data, options);
+        }
+        var update = function(){
+          var user_name = form.find("input[id='user_name']").val();
+          var year      = form.find("input[id='year']").val();
+          var season    = form.find("input[id='season']").val();
+          var season_name = year + "-" + season
+          var path = URLJoin("http://localhost:8080/polls/", user_name, season_name, "?key=abc123")
+          var records;
+          $.get(path, null, null, "json")
+            .done(function(records){
+              alert(JSON.stringify(records));
+            }
+            );
+          window.setTimeout(update, 10000);
+        }
+        update();
+      });
+    </script>
+  </body>
+</html>
