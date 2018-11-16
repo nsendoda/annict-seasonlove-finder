@@ -9,12 +9,6 @@ import (
   "strings"
 )
 
-const (
-	CURL_PAGE_NUMBER       = 2000
-  READY_CURL_PAGE_NUMBER = 1000
-	TEST_CURL_PAGE_NUMBER  = 3
-)
-
 func getAndDecodeAnnictRatings(page int) ([][]string, error) {
 	apiKey := os.Getenv("ANNICT_APIKEY")
 	annict := &annict.Annict{APIKey: apiKey}
