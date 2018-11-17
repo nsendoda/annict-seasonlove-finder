@@ -1,11 +1,10 @@
 package main
 
 import (
+	"annict-seasonlove-finder/recorder/bsonmconverter"
 	"log"
-	"my_project/seasonlove-finder/recorder/bsonmconverter"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -29,7 +28,7 @@ func recorderMain() error {
 	ratingCollection := db.DB("annict").C("rating")
 
 	var recordsLock sync.Mutex
-	var records [][]string
+	var records []string
 
 	log.Println("NSQに接続します")
 	q, err := nsq.NewConsumer("votes", "recorder", nsq.NewConfig())
@@ -41,10 +40,9 @@ func recorderMain() error {
 		recordsLock.Lock()
 		defer recordsLock.Unlock()
 		if records == nil {
-			records = make([][]string, 0)
+			records = make([]string, 0)
 		}
-		parsed_string := strings.Split(string(m.Body), ",")
-		records = append(records, parsed_string)
+		records = append(records, string(m.Body))
 		return nil
 	}))
 
@@ -65,8 +63,8 @@ func recorderMain() error {
 			return
 		}
 		log.Println("データベースを更新します...")
-		log.Printf("recordsinfo records length: %d, record size: %d", len(records), len(records[0]))
-		log.Println(records[0])
+		log.Printf("recordsinfo records length: %d", len(records))
+		log.Println("first factor: ", records[0])
 		ok := true
 		for _, record := range records {
 			query := ratingCollection.Find(bconverter.BsonMAfterDateRating(record))
@@ -83,7 +81,7 @@ func recorderMain() error {
 					log.Println("更新に失敗しました.", err)
 					ok = false
 				}
-        log.Println("Upserted. ", record)
+				log.Println("Upserted. ", record)
 				log.Printf("is_updated: %d, number of doc remove: %d, number of doc matched: %d",
 					changeinfo.Updated, changeinfo.Removed, changeinfo.Matched)
 			} else {
