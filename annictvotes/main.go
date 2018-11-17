@@ -27,13 +27,13 @@ func closedb() {
 //
 func publishVotes(votes <-chan string) {
 	pub, _ := nsq.NewProducer("localhost:4150", nsq.NewConfig())
-  for vote := range votes {
-    log.Printf("%qを送信.\n", vote)
-    pub.Publish("votes", []byte(vote)) // 投票内容をパブリッシュします
-  }
-  log.Println("Publisher: 停止中です")
-  pub.Stop()
-  log.Println("Publisher: 停止しました")
+	for vote := range votes {
+		log.Printf("%qを送信.\n", vote)
+		pub.Publish("votes", []byte(vote)) // 投票内容をパブリッシュします
+	}
+	log.Println("Publisher: 停止中です")
+	pub.Stop()
+	log.Println("Publisher: 停止しました")
 }
 
 func main() {
