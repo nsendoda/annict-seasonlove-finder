@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/naninunenosi/annict-seasonlove-finder/annictvotes/annict"
 	"context"
 	"log"
 	"os"
-	"annict-seasonlove-finder/annictvotes/annict"
 	"time"
 )
 

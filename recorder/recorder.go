@@ -1,7 +1,7 @@
 package main
 
 import (
-	"annict-seasonlove-finder/recorder/bsonmconverter"
+	"github.com/naninunenosi/annict-seasonlove-finder/recorder/bsonmconverter"
 	"log"
 	"os"
 	"os/signal"
