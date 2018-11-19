@@ -3,6 +3,7 @@ package annict
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -41,6 +42,10 @@ func (a *Annict) decode(response *http.Response) ([]string, error) {
 	s := buf.Bytes()
 	var map_records interface{}
 	err := jsoniter.Unmarshal(s, &map_records)
+	if err != nil {
+		log.Println("Unmarshal failed", err)
+		return make([]string, 0), err
+	}
 	var res []string
 	for _, map_rec := range map_records.(map[string]interface{})["records"].([]interface{}) {
 		str_rec, _ := jsoniter.Marshal(map_rec)
