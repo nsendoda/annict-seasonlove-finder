@@ -7,6 +7,7 @@ import (
 )
 
 const CREATEDAT = "created_at"
+const ISMODIFIED = "is_modified"
 
 type bsonMConverter struct {
 	episode_identify_key map[string][]string
@@ -14,11 +15,11 @@ type bsonMConverter struct {
 
 func NewBsonMConverter() *bsonMConverter {
 	b := bsonMConverter{}
-	b.episode_identify_key = map[string][]string{"user": {"id"}, "work": {"id"}, "episode": {"id"}}
+	b.episode_identify_key = map[string][]string{"user": {"id"},  "episode": {"id"}}
 	return &b
 }
 
-func (b bsonMConverter) BsonMRating(record string) (m bson.M) {
+func (b bsonMConverter) BsonMRating(record string) bson.M {
 	var bdoc bson.M
 	err := bson.UnmarshalJSON([]byte(record), &bdoc)
 	if err != nil {
@@ -55,10 +56,25 @@ func (b bsonMConverter) BsonMEpisodeIdentify(record string, s bson.M) (m bson.M)
 	return m
 }
 
+func (b bsonMConverter) IsModified(record string) bool {
+	m := b.BsonMRating(record)
+	if m[ISMODIFIED] == "true" {
+		return true
+	}
+	return false
+}
+
 func (b bsonMConverter) BsonMAfterDateRating(record string) (m bson.M) {
 	s := b.BsonMRating(record)
 	m = b.BsonMEpisodeIdentify(record, s)
 	m[CREATEDAT] = bson.M{"$gt": s[CREATEDAT]}
+	return m
+}
+
+func (b bsonMConverter) BsonMAfterOrEqualDateRating(record string) (m bson.M) {
+	s := b.BsonMRating(record)
+	m = b.BsonMEpisodeIdentify(record, s)
+	m[CREATEDAT] = bson.M{"$gte": s[CREATEDAT]}
 	return m
 }
 
