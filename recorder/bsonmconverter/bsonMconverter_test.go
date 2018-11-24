@@ -13,8 +13,14 @@ func TestNew(t *testing.T) {
 	}
 	query := string(b)
 	bsonmconverter := NewBsonMConverter()
-	log.Println(bsonmconverter.BsonMRating(query))
-	log.Println(bsonmconverter.BsonMAfterDateRating(query))
-	log.Println(bsonmconverter.BsonMUntilDateRating(query))
+	m, err := bsonmconverter.BsonMRating(query)
+	log.Println(m)
+	if err != nil {
+		t.Error(err)
+	}
+	a := bsonmconverter.BsonMAfterDateRating(query)
+	log.Println(a)
+	c := bsonmconverter.BsonMUntilDateRating(query)
+	log.Println(c)
 
 }

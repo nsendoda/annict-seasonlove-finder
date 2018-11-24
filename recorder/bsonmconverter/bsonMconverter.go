@@ -2,7 +2,7 @@ package bsonmconverter
 
 import (
 	"log"
-
+	"github.com/naninunenosi/annict-seasonlove-finder/recfilter"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -19,15 +19,19 @@ func NewBsonMConverter() *bsonMConverter {
 	return &b
 }
 
-func (b bsonMConverter) BsonMRating(record string) bson.M {
-	var bdoc bson.M
-	err := bson.UnmarshalJSON([]byte(record), &bdoc)
+// convert json string to squeezed bson.M
+func (b bsonMConverter) BsonMRating(record string) (bson.M, error) {
+	var bdoc bson.M	
+        encoded_bytes, err := recfilter.Squeeze(record)
+	err = bson.UnmarshalJSON(encoded_bytes, &bdoc)
 	if err != nil {
 		log.Println("bsonMconverter.go:BsonMRating: BSON.Mへの変換が失敗しました.", err)
+		return bson.M{}, err
 	}
-	return bdoc
+	return bdoc, nil
 }
 
+// convert interface{} to bson.M
 func Map(v interface{}) bson.M {
 	js, err := bson.MarshalJSON(v)
 	if err != nil {
@@ -42,7 +46,9 @@ func Map(v interface{}) bson.M {
 	return bdoc
 }
 
-func (b bsonMConverter) BsonMEpisodeIdentify(record string, s bson.M) (m bson.M) {
+// bson.M型からユーザーのエピソードに対する記録を特定する要素のみを抽出したbson.M型を返す
+// 現在はepisode.idとuser.username
+func (b bsonMConverter) BsonMEpisodeIdentify(s bson.M) (m bson.M) {
 	m = bson.M{}
 	for first_key, second_identify_key := range b.episode_identify_key {
 		m[first_key] = bson.M{}
@@ -57,7 +63,7 @@ func (b bsonMConverter) BsonMEpisodeIdentify(record string, s bson.M) (m bson.M)
 }
 
 func (b bsonMConverter) IsModified(record string) bool {
-	m := b.BsonMRating(record)
+	m, _ := b.BsonMRating(record)
 	if m[ISMODIFIED] == "true" {
 		return true
 	}
@@ -65,22 +71,22 @@ func (b bsonMConverter) IsModified(record string) bool {
 }
 
 func (b bsonMConverter) BsonMAfterDateRating(record string) (m bson.M) {
-	s := b.BsonMRating(record)
-	m = b.BsonMEpisodeIdentify(record, s)
+	s, _ := b.BsonMRating(record)
+	m = b.BsonMEpisodeIdentify(s)
 	m[CREATEDAT] = bson.M{"$gt": s[CREATEDAT]}
 	return m
 }
 
 func (b bsonMConverter) BsonMAfterOrEqualDateRating(record string) (m bson.M) {
-	s := b.BsonMRating(record)
-	m = b.BsonMEpisodeIdentify(record, s)
+	s, _ := b.BsonMRating(record)
+	m = b.BsonMEpisodeIdentify(s)
 	m[CREATEDAT] = bson.M{"$gte": s[CREATEDAT]}
 	return m
 }
 
 func (b bsonMConverter) BsonMUntilDateRating(record string) (m bson.M) {
-	s := b.BsonMRating(record)
-	m = b.BsonMEpisodeIdentify(record, s)
+	s, _ := b.BsonMRating(record)
+	m = b.BsonMEpisodeIdentify(s)
 	m[CREATEDAT] = bson.M{"$lte": s[CREATEDAT]}
 	return m
 }

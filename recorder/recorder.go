@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/naninunenosi/annict-seasonlove-finder/recorder/bsonmconverter"
 	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/naninunenosi/annict-seasonlove-finder/recorder/bsonmconverter"
 
 	nsq "github.com/bitly/go-nsq"
 	mgo "gopkg.in/mgo.v2"
@@ -64,24 +65,41 @@ func recorderMain() error {
 		}
 		log.Println("データベースを更新します...")
 		log.Printf("recordsinfo records length: %d", len(records))
-		log.Println("first factor: ", records[0])
 		ok := true
 		for _, record := range records {
+			// when record is after the latest, insert
+			// when record is equal to the latest and modified, upsert
+
 			query := ratingCollection.Find(bconverter.BsonMAfterDateRating(record))
 			ct, err := query.Count()
-			if err != nil {
-				log.Println("queryの計数に失敗しました.", err)
+			query_e := ratingCollection.Find(bconverter.BsonMAfterOrEqualDateRating(record))
+			ct_e, err2 := query_e.Count()
+			if err != nil || err2 != nil {
+				log.Println("queryの計数に失敗しました.", err, err2)
 				ok = false
 				continue
 			}
-			if ct == 0 {
-				changeinfo, err := ratingCollection.Upsert(bconverter.BsonMUntilDateRating(record),
-					bconverter.BsonMRating(record))
+			if ct_e == 0 {
+				log.Println("new doc. Ready Insert.")
+				m, _ := bconverter.BsonMRating(record)
+				err := ratingCollection.Insert(m)
+				if err != nil {
+					log.Println("挿入に失敗しました.", err)
+					ok = false
+				} else {
+					log.Println("inserted:", m["id"])
+				}
+			} else if ct == 0 && bconverter.IsModified(record) {
+				log.Println("detect modified. Ready Upsert.")
+				m, _ := bconverter.BsonMRating(record)
+				changeinfo, err := ratingCollection.Upsert(bconverter.BsonMUntilDateRating(record), m)
 				if err != nil {
 					log.Println("更新に失敗しました.", err)
 					ok = false
+				} else {
+					log.Println("upserted:", m["id"])
 				}
-				log.Println("Upserted. ", record)
+				// log.Println(record)
 				log.Printf("is_updated: %d, number of doc remove: %d, number of doc matched: %d",
 					changeinfo.Updated, changeinfo.Removed, changeinfo.Matched)
 			} else {
