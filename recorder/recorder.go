@@ -70,18 +70,17 @@ func recorderMain() error {
 			// when record is after the latest, insert
 			// when record is equal to the latest and modified, upsert
 
-			query := ratingCollection.Find(bconverter.BsonMAfterDateRating(record))
-			ct, err := query.Count()
-			query_e := ratingCollection.Find(bconverter.BsonMAfterOrEqualDateRating(record))
-			ct_e, err2 := query_e.Count()
-			if err != nil || err2 != nil {
-				log.Println("queryの計数に失敗しました.", err, err2)
-				ok = false
+			m, _ := bconverter.BsonMRating(record)
+			episode_identify_m := bconverter.BsonMEpisodeIdentify(m)
+			has_data := ratingCollection.Find(episode_identify_m)
+			has_data_ct, err := has_data.Count()
+			if err != nil {
+				log.Println("first findの計数に失敗しました。")
 				continue
 			}
-			if ct_e == 0 {
+			// 該当するエピソードの記録がまだないならばInsert
+			if has_data_ct == 0 {
 				log.Println("new doc. Ready Insert.")
-				m, _ := bconverter.BsonMRating(record)
 				err := ratingCollection.Insert(m)
 				if err != nil {
 					log.Println("挿入に失敗しました.", err)
@@ -89,21 +88,35 @@ func recorderMain() error {
 				} else {
 					log.Println("inserted:", m["id"])
 				}
-			} else if ct == 0 && bconverter.IsModified(record) {
-				log.Println("detect modified. Ready Upsert.")
-				m, _ := bconverter.BsonMRating(record)
-				changeinfo, err := ratingCollection.Upsert(bconverter.BsonMUntilDateRating(record), m)
-				if err != nil {
-					log.Println("更新に失敗しました.", err)
-					ok = false
-				} else {
-					log.Println("upserted:", m["id"])
-				}
-				// log.Println(record)
-				log.Printf("is_updated: %d, number of doc remove: %d, number of doc matched: %d",
-					changeinfo.Updated, changeinfo.Removed, changeinfo.Matched)
+
+			// 該当するエピソードの記録がある時は、
+			// 受け取ったjsonの方が新しいならUpdate
+			// 全く同じ時間（つまり記録IDが一致）しているなら、is_modifiedがtrueであればUpdate
+			// 受け取ったjsonの方が古いならSkip
 			} else {
-				log.Println("更新対象ではないため、skipをします.\n", record)
+				query := ratingCollection.Find(bconverter.BsonMAfterDateRating(record))
+				ct, err := query.Count()
+				query_e := ratingCollection.Find(bconverter.BsonMAfterOrEqualDateRating(record))
+				ct_e, err2 := query_e.Count()
+				if err != nil || err2 != nil {
+					log.Println("queryの計数に失敗しました.", err, err2)
+					ok = false
+					continue
+				}
+				// Update
+				if ct_e == 0 || (ct == 0 && bconverter.IsModified(record)) {
+					log.Println("detect modified. Ready Upsert.")
+					err := ratingCollection.Update(episode_identify_m, m)
+					if err != nil {
+						log.Println("更新に失敗しました.", err)
+						ok = false
+					} else {
+						log.Println("updated:", m["id"])
+					}
+				// Skip
+				} else {
+					log.Println("更新対象ではないため、skipをします.\n")
+				}
 			}
 		}
 		if ok {
