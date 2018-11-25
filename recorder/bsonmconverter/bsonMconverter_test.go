@@ -95,4 +95,14 @@ func TestNew(t *testing.T) {
   } else {
     log.Println("UntilData Test OK")
   }
+  if bsonmconverter.IsModified(s[1]) != true {
+    t.Error("IsModified error. expected: true")
+  } else {
+    log.Println("IsModified check s[1] ok.")
+  }
+  if bsonmconverter.IsModified(s[2]) != false {
+    t.Error("IsModified error. expected: false")
+  } else {
+    log.Println("IsModified check s[2] ok.")
+  }
 }
