@@ -65,7 +65,7 @@ func (b bsonMConverter) BsonMEpisodeIdentify(s bson.M) (m bson.M) {
 
 func (b bsonMConverter) IsModified(record string) bool {
 	m, _ := b.BsonMRating(record)
-	if m[ISMODIFIED] == "true" {
+	if m[ISMODIFIED] == true {
 		return true
 	}
 	return false
