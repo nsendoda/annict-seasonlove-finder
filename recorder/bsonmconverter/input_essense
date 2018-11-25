@@ -1,0 +1,24 @@
+①"id":1947290, "rating_state":"good",
+  "user":{"id":647,"username":"K"},
+  "episode":{"id":94110}, "is_modified":false
+  "created_at":"2018-11-17T10:13:26.607Z"
+
+②"id" : 1960532, "rating_state" : "great", 
+  "user" : { "id" : 15688, "username" : "naninunenosi"},
+  "episode" : { "id" : 104554}, "is_modified" : false, 
+  "created_at" : "2018-11-24T16:45:23.246Z"
+
+③"id" : 1960531,    "rating_state" : "good", 
+  "user" : { "id" : 15688, "username" : "naninunenosi" },
+  "episode" : { "id" : 104554 }, "is_modified" : false, 
+  "created_at" : "2018-11-24T16:45:17.782Z"
+
+時系列: 1 -> 3 -> 2
+username: 1:K, 2,3:naninunenosi
+episode.id: 2=3 
+
+index setting: 
+"user.username":-1
+"episode.id":-1
+"created_at":-1
+"id":-1,{"unique":true}
