@@ -2,6 +2,7 @@ package bsonmconverter
 
 import (
 	"log"
+
 	"github.com/naninunenosi/annict-seasonlove-finder/recfilter"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -15,14 +16,14 @@ type bsonMConverter struct {
 
 func NewBsonMConverter() *bsonMConverter {
 	b := bsonMConverter{}
-	b.episode_identify_key = map[string][]string{"user": {"id"},  "episode": {"id"}}
+	b.episode_identify_key = map[string][]string{"user": {"id"}, "episode": {"id"}}
 	return &b
 }
 
 // convert json string to squeezed bson.M
 func (b bsonMConverter) BsonMRating(record string) (bson.M, error) {
-	var bdoc bson.M	
-        encoded_bytes, err := recfilter.Squeeze(record)
+	var bdoc bson.M
+	encoded_bytes, err := recfilter.Squeeze(record)
 	err = bson.UnmarshalJSON(encoded_bytes, &bdoc)
 	if err != nil {
 		log.Println("bsonMconverter.go:BsonMRating: BSON.Mへの変換が失敗しました.", err)
@@ -49,14 +50,14 @@ func Map(v interface{}) bson.M {
 // bson.M型からユーザーのエピソードに対する記録を特定する要素のみを抽出したbson.M型を返す
 // 現在はepisode.idとuser.username
 func (b bsonMConverter) BsonMEpisodeIdentify(s bson.M) (m bson.M) {
+  var join = func(a string, b string) string {
+    return a + "." + b
+  }
 	m = bson.M{}
 	for first_key, second_identify_key := range b.episode_identify_key {
-		m[first_key] = bson.M{}
 		for _, second_key := range second_identify_key {
 			s_f := Map(s[first_key])
-			m_f := Map(m[first_key])
-			m_f[second_key] = s_f[second_key]
-			m[first_key] = m_f
+			m[join(first_key, second_key)] = s_f[second_key]
 		}
 	}
 	return m
