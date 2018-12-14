@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -44,7 +45,10 @@ func handlePollsGet(w http.ResponseWriter, r *http.Request) {
 		respondErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
-	log.Println(result[0])
+  min_ct, err := strconv.Atoi(p.MinStoryCount)
+  if err == nil {
+	  result = NarrowRecord(result, min_ct)
+  }
 	log.Println("internal output end")
 	respond(w, r, http.StatusOK, &result)
 }

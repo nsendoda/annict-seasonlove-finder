@@ -10,6 +10,8 @@ import (
 	mgo "gopkg.in/mgo.v2"
 )
 
+const API_PATH = "/annict-rating/"
+
 func main() {
 	var (
 		addr  = flag.String("addr", ":8080", "エンドポイントのアドレス")
@@ -23,7 +25,7 @@ func main() {
 	}
 	defer db.Close()
 	mux := http.NewServeMux()
-	mux.HandleFunc("/polls/", withCORS(withVars(withData(db,
+	mux.HandleFunc(API_PATH, withCORS(withVars(withData(db,
 		withAPIKey(handlePolls)))))
 	log.Println("Webサーバーを開始します:", *addr)
 	graceful.Run(*addr, 1*time.Second, mux)
